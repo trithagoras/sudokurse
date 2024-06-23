@@ -42,3 +42,27 @@ void Game::draw_grid(int offsetY, int offsetX) {
         }
     }
 }
+
+int Game::at(int row, int col) {
+    return game[row][col];
+}
+void Game::set(int row, int col, int value) {
+    if (value < 1 || value > 9) {
+        value = unset;
+    }
+    game[row][col] = value;
+}
+std::pair<int, int> Game::at_cursor() {
+    return std::pair<int, int>(cursorY, cursorX);
+}
+void Game::translate_cursor(int dRow, int dCol) {
+    cursorY += dRow;
+    cursorX += dCol;
+}
+void Game::move_cursor(int row, int col) {
+    cursorY = row;
+    cursorX = col;
+}
+void Game::set_at_cursor(int value) {
+    game[cursorY][cursorX] = value;
+}
