@@ -2,6 +2,6 @@
 
 int main() {
     auto game = Game();
-    game.init_view();
+    game.start();
     return 0;
 }
