@@ -20,6 +20,10 @@ Game::~Game() {
 
 void Game::start() {
     init_view();
+
+    // initialize solution board and initial game state
+    
+
     update_loop();
 }
 
@@ -40,13 +44,23 @@ void Game::init_view() const {
 }
 
 void Game::refresh_view() const {
-    mvaddstr(0, cellWidth, "Sudokurse -- Easy");
+    mvaddstr(0, cellWidth * offsetX, "Sudokurse -- Easy");
     draw_grid();
 
     // draw cursor
     attron(COLOR_PAIR(cursorColorPair));
     mvaddch(cursorY * cellHeight + (offsetY * cellHeight) + 1, cursorX * cellWidth + (offsetX * cellWidth) + 2, int_to_char(at_cursor()));
     attroff(COLOR_PAIR(cursorColorPair));
+
+    draw_help();
+}
+
+void Game::draw_help() const {
+    int x = cellWidth * offsetX;
+    mvaddstr(23, x, "Help");
+    mvaddstr(24, x, "[1..9] Set number at cursor position");
+    mvaddstr(25, x, "[SPACE] Unset number at cursor position");
+    mvaddstr(26, x, "[Q] Quit game");
 }
 
 void Game::update_loop() {

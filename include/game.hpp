@@ -25,8 +25,10 @@ public:
 private:
     int cursorY = 0, cursorX = 0;
     std::array<std::array<int, 9>, 9> game{};
+    std::array<std::array<int, 9>, 9> solution{};
     void draw_cell(int row, int col, int value) const;
     void init_view() const;
     void draw_grid() const;
     void refresh_view() const;
+    void draw_help() const;
 };
