@@ -34,6 +34,7 @@ void Game::start() {
         for (int c = 0; c < 9; c++) {
             game[r][c] = puzzle.grid[r][c];
             solution[r][c] = puzzle.solnGrid[r][c];
+            initialState[r][c] = puzzle.grid[r][c];
         }
     }
 
@@ -56,6 +57,7 @@ void Game::init_view() const {
     init_color(COLOR_GRAY, 372, 372, 372);
     init_pair(lightColorPair, COLOR_GRAY, COLOR_BLACK);
     init_pair(cursorColorPair, COLOR_BLACK, COLOR_WHITE);
+    init_pair(yellowColorPair, COLOR_YELLOW, COLOR_BLACK);
 }
 
 void Game::refresh_view() const {
@@ -113,19 +115,29 @@ void Game::update_loop() {
     }
 }
 
-// a value = -1 is equivalent to empty
+// a value = 0 is equivalent to empty
 void Game::draw_cell(int row, int col, int value) const {
     if (value < 1 || value > 9) {
-        value = -1;
+        value = unset;
     }
+    int y = row + offsetY;
+    int x = col + offsetX;
+
     attron(COLOR_PAIR(lightColorPair));
-    mvaddstr(row * cellHeight, col * cellWidth,     "+---+");
-    mvaddstr(row * cellHeight + 1, col * cellWidth, "|   |");
-    mvaddstr(row * cellHeight + 2, col * cellWidth, "+---+");
+    mvaddstr(y * cellHeight, x * cellWidth,     "+---+");
+    mvaddstr(y * cellHeight + 1, x * cellWidth, "|   |");
+    mvaddstr(y * cellHeight + 2, x * cellWidth, "+---+");
     attroff(COLOR_PAIR(lightColorPair));
 
-    if (value != -1) {
-        mvaddch(row * cellHeight + 1, col * cellWidth + 2, int_to_char(value));
+    if (value != unset) {
+        // if value is in initialState, draw in different color
+        if (initialState[row][col] != unset) {
+            mvaddch(y * cellHeight + 1, x * cellWidth + 2, int_to_char(value));
+        } else {
+            attron(COLOR_PAIR(yellowColorPair));
+            mvaddch(y * cellHeight + 1, x * cellWidth + 2, int_to_char(value));
+            attroff(COLOR_PAIR(yellowColorPair));
+        }
     }
 }
 
@@ -133,7 +145,7 @@ void Game::draw_grid() const {
     // draw all grid lines in gray color
     for (int row = 0; row < 9; row++) {
         for (int col = 0; col < 9; col++) {
-            draw_cell(row + offsetY, col + offsetX, game[row][col]);
+            draw_cell(row, col, game[row][col]);
         }
     }
 
@@ -154,6 +166,10 @@ int Game::at(int row, int col) const {
     return game[row][col];
 }
 void Game::set(int row, int col, int value) {
+    // do nothing if this is initial value
+    if (initialState[row][col] != unset) {
+        return;
+    }
     if (value < 1 || value > 9) {
         value = unset;
     }
@@ -171,5 +187,5 @@ void Game::move_cursor(int row, int col) {
     cursorX = col;
 }
 void Game::set_at_cursor(int value) {
-    game[cursorY][cursorX] = value;
+    set(cursorY, cursorX, value);
 }

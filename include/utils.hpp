@@ -9,7 +9,7 @@ char int_to_char(int value) {
 
 int char_to_int(char value) {
     if (value < '1' || value > '9') {
-        return -1;
+        return 0;
     }
     return value - '0';
 }
