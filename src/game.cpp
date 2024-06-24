@@ -4,8 +4,11 @@
 #include "utils.hpp"
 #include <iostream>
 #include <format>
+#include "sudoku.hpp"
 
 Game::Game() {
+    srand(time(NULL));  // init random seed
+
     // init game board
     for (int row = 0; row < 9; row++) {
         for (int col = 0; col < 9; col++) {
@@ -22,7 +25,17 @@ void Game::start() {
     init_view();
 
     // initialize solution board and initial game state
-    
+    auto puzzle = Sudoku();
+    puzzle.createSeed();
+    puzzle.genPuzzle();
+    puzzle.calculateDifficulty();
+
+    for (int r = 0; r < 9; r++) {
+        for (int c = 0; c < 9; c++) {
+            game[r][c] = puzzle.grid[r][c];
+            solution[r][c] = puzzle.solnGrid[r][c];
+        }
+    }
 
     update_loop();
 }
@@ -40,6 +53,8 @@ void Game::init_view() const {
     }
 
     start_color();
+    init_color(COLOR_GRAY, 372, 372, 372);
+    init_pair(lightColorPair, COLOR_GRAY, COLOR_BLACK);
     init_pair(cursorColorPair, COLOR_BLACK, COLOR_WHITE);
 }
 
@@ -103,18 +118,34 @@ void Game::draw_cell(int row, int col, int value) const {
     if (value < 1 || value > 9) {
         value = -1;
     }
+    attron(COLOR_PAIR(lightColorPair));
     mvaddstr(row * cellHeight, col * cellWidth,     "+---+");
     mvaddstr(row * cellHeight + 1, col * cellWidth, "|   |");
     mvaddstr(row * cellHeight + 2, col * cellWidth, "+---+");
+    attroff(COLOR_PAIR(lightColorPair));
+
     if (value != -1) {
         mvaddch(row * cellHeight + 1, col * cellWidth + 2, int_to_char(value));
     }
 }
 
 void Game::draw_grid() const {
+    // draw all grid lines in gray color
     for (int row = 0; row < 9; row++) {
         for (int col = 0; col < 9; col++) {
             draw_cell(row + offsetY, col + offsetX, game[row][col]);
+        }
+    }
+
+    // then main segments in white
+    for (int row = 0; row <= 3; row++) {
+        mvaddstr((offsetY * cellHeight) + (row * cellHeight * 3), (offsetX * cellWidth), "+---+---+---+---+---+---+---+---+---+");
+    }
+
+    for (int col = 0; col <= 3; col++) {
+        for (int row = 0; row < 9; row++) {
+            mvaddch((offsetY * cellHeight) + (row * cellHeight), (offsetX * cellWidth) + (col * cellWidth * 3), '+');
+            mvaddch((offsetY * cellHeight) + (row * cellHeight) + 1, (offsetX * cellWidth) + (col * cellWidth * 3), '|');
         }
     }
 }

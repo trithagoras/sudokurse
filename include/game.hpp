@@ -4,10 +4,18 @@
 constexpr int cellHeight = 2;
 constexpr int cellWidth = 4;
 constexpr int unset = -1;
-constexpr int defaultColorPair = 1;
+constexpr int lightColorPair = 1;
+constexpr int COLOR_GRAY = 8;
 constexpr int cursorColorPair = 2;
 constexpr int offsetY = 1;
 constexpr int offsetX = 1;
+
+enum class Difficulty {
+    Easy,
+    Medium,
+    Hard,
+    Master
+};
 
 class Game {
 public:
@@ -24,6 +32,7 @@ public:
 
 private:
     int cursorY = 0, cursorX = 0;
+    Difficulty difficulty = Difficulty::Easy;
     std::array<std::array<int, 9>, 9> game{};
     std::array<std::array<int, 9>, 9> solution{};
     void draw_cell(int row, int col, int value) const;
