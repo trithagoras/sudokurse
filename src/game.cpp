@@ -3,8 +3,21 @@
 #include <cstdlib>
 #include "utils.hpp"
 #include <iostream>
-#include <format>
 #include "sudoku.hpp"
+
+std::string difficulty_str(Difficulty d) {
+    switch (d) {
+        case Difficulty::Easy:
+            return "easy";
+        case Difficulty::Medium:
+            return "medium";
+        case Difficulty::Hard:
+            return "hard";
+        case Difficulty::Master:
+            return "master";
+    }
+    return "UNKNOWN";
+}
 
 Game::Game() {
     srand(time(NULL));  // init random seed
@@ -21,14 +34,21 @@ Game::~Game() {
     endwin();
 }
 
-void Game::start() {
-    init_view();
-
+void Game::reset_game() {
     // initialize solution board and initial game state
     auto puzzle = Sudoku();
     puzzle.createSeed();
     puzzle.genPuzzle();
     puzzle.calculateDifficulty();
+    if (puzzle.difficultyLevel <= 400) {
+        difficulty = Difficulty::Easy;
+    } else if (puzzle.difficultyLevel <= 800) {
+        difficulty = Difficulty::Medium;
+    } else if (puzzle.difficultyLevel <= 1100) {
+        difficulty = Difficulty::Hard;
+    } else {
+        difficulty = Difficulty::Master;
+    }
 
     for (int r = 0; r < 9; r++) {
         for (int c = 0; c < 9; c++) {
@@ -37,7 +57,11 @@ void Game::start() {
             initialState[r][c] = puzzle.grid[r][c];
         }
     }
+}
 
+void Game::start() {
+    init_view();
+    reset_game();
     update_loop();
 }
 
@@ -58,10 +82,13 @@ void Game::init_view() const {
     init_pair(lightColorPair, COLOR_GRAY, COLOR_BLACK);
     init_pair(cursorColorPair, COLOR_BLACK, COLOR_WHITE);
     init_pair(yellowColorPair, COLOR_YELLOW, COLOR_BLACK);
+    init_pair(greenColorPair, COLOR_GREEN, COLOR_BLACK);
+    init_pair(redColorPair, COLOR_RED, COLOR_BLACK);
 }
 
-void Game::refresh_view() const {
-    mvaddstr(0, cellWidth * offsetX, "Sudokurse -- Easy");
+void Game::refresh_view() {
+    auto titleStr = "Sudokurse -- " + difficulty_str(difficulty);
+    mvaddstr(0, cellWidth * offsetX, titleStr.c_str());
     draw_grid();
 
     // draw cursor
@@ -70,14 +97,35 @@ void Game::refresh_view() const {
     attroff(COLOR_PAIR(cursorColorPair));
 
     draw_help();
+
+    // draw error / success
+    if (errorText != "" || successText != "") {
+        if (errorText != "") {
+            attron(COLOR_PAIR(redColorPair));
+            mvaddstr(23, 3, errorText.c_str());
+            attroff(COLOR_PAIR(redColorPair));
+        } else if (successText != "") {
+            attron(COLOR_PAIR(greenColorPair));
+            mvaddstr(23, 3, successText.c_str());
+            attroff(COLOR_PAIR(greenColorPair));
+        }
+        errorText = "";
+        successText = "";
+    }
 }
 
 void Game::draw_help() const {
-    int x = cellWidth * offsetX;
-    mvaddstr(23, x, "Help");
-    mvaddstr(24, x, "[1..9] Set number at cursor position");
-    mvaddstr(25, x, "[SPACE] Unset number at cursor position");
-    mvaddstr(26, x, "[Q] Quit game");
+    int x = 47;
+    int y = 3;
+    mvaddstr(y++, x, "Help");
+    mvaddstr(y++, x, "[1..9] Set number at cursor position");
+    mvaddstr(y++, x, "[SPACE] Unset number at cursor position");
+    mvaddstr(y++, x, "[ENTER] Present solution");
+    y++;
+    mvaddstr(y++, x, "[R] Reset this game");
+    mvaddstr(y++, x, "[N] New game    [Q] Quit game");
+    y++;
+    mvaddstr(y++, x, "[S] Auto solve");
 }
 
 void Game::update_loop() {
@@ -107,8 +155,23 @@ void Game::update_loop() {
                 break;
             case KEY_BACKSPACE:
             case ' ':
-            case KEY_ENTER:
                 set_at_cursor(unset);
+                break;
+            case 'n':
+            case 'N':
+                reset_game();
+                break;
+            case 'R':
+            case 'r':
+                game = initialState;
+                break;
+            case KEY_ENTER:
+            case 10:    // \n
+                try_solve();
+                break;
+            case 'S':
+            case 's':
+                auto_solve();
                 break;
         }
         refresh();
@@ -191,4 +254,19 @@ void Game::move_cursor(int row, int col) {
 }
 void Game::set_at_cursor(int value) {
     set(cursorY, cursorX, value);
+}
+
+void Game::try_solve() {
+    for (int row = 0; row < 9; row++) {
+        for (int col = 0; col < 9; col++) {
+            if (game[row][col] != solution[row][col]) {
+                errorText = "Your solution is incorrect.";
+            }
+        }
+    }
+    successText = "Congratulations! You solved the puzzle!";
+}
+
+void Game::auto_solve() {
+    game = solution;
 }
