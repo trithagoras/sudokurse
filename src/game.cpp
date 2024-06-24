@@ -179,10 +179,13 @@ int Game::at_cursor() const {
     return game[cursorY][cursorX];
 }
 void Game::translate_cursor(int dRow, int dCol) {
-    cursorY += dRow;
-    cursorX += dCol;
+    move_cursor(cursorY + dRow, cursorX + dCol);
 }
 void Game::move_cursor(int row, int col) {
+    // prevent OOB
+    if (row < 0 || row >= 9 || col < 0 || col >= 9) {
+        return;
+    }
     cursorY = row;
     cursorX = col;
 }
