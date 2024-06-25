@@ -4,6 +4,9 @@
 #include "utils.hpp"
 #include <iostream>
 #include "sudoku.hpp"
+#include <chrono>
+#include <thread>
+#include "stopwatch.hpp"
 
 std::string difficulty_str(Difficulty d) {
     switch (d) {
@@ -54,14 +57,19 @@ void Game::reset_game() {
     for (int r = 0; r < 9; r++) {
         for (int c = 0; c < 9; c++) {
             game[r][c] = puzzle.grid[r][c];
+            penciled[r][c] = unset;
             solution[r][c] = puzzle.solnGrid[r][c];
             initialState[r][c] = puzzle.grid[r][c];
         }
     }
+
+    // reset stopwatch as last step so it doesn't clock up seconds during CPU blocks
+    stopwatch->restart();
 }
 
 void Game::start() {
     init_view();
+    stopwatch = std::make_unique<Stopwatch>();
     reset_game();
     update_loop();
 }
@@ -71,6 +79,7 @@ void Game::init_view() const {
     curs_set(0);
     keypad(stdscr, true);
     noecho();
+    nodelay(stdscr, true);
 
     // init colors
     if (!has_colors() || !can_change_color()) {
@@ -91,6 +100,7 @@ void Game::init_view() const {
 void Game::refresh_view() {
     auto titleStr = "Sudokurse -- " + difficulty_str(difficulty);
     mvaddstr(0, cellWidth * offsetX, titleStr.c_str());
+    mvaddstr(0, 47, stopwatch->elapsed_time().c_str());
     draw_grid();
 
     // draw cursor
@@ -113,6 +123,9 @@ void Game::refresh_view() {
         }
         errorText = "";
         successText = "";
+        nodelay(stdscr, false);
+        getch();
+        nodelay(stdscr, true);
     }
 }
 
@@ -212,6 +225,7 @@ void Game::update_loop() {
                 break;
         }
         refresh();
+        std::this_thread::sleep_for(std::chrono::milliseconds(20)); // 50 FPS
     }
 }
 

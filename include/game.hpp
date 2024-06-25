@@ -1,6 +1,8 @@
 #pragma once
 #include <array>
 #include <string>
+#include "stopwatch.hpp"
+#include <memory>
 
 constexpr int cellHeight = 2;
 constexpr int cellWidth = 4;
@@ -53,4 +55,5 @@ private:
     void draw_help() const;
     std::string errorText;
     std::string successText;
+    std::unique_ptr<Stopwatch> stopwatch;
 };
