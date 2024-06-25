@@ -70,6 +70,7 @@ void Game::init_view() const {
     initscr();
     curs_set(0);
     keypad(stdscr, true);
+    noecho();
 
     // init colors
     if (!has_colors() || !can_change_color()) {
