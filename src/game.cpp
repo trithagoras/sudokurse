@@ -102,11 +102,11 @@ void Game::refresh_view() {
     if (errorText != "" || successText != "") {
         if (errorText != "") {
             attron(COLOR_PAIR(redColorPair));
-            mvaddstr(23, 3, errorText.c_str());
+            mvaddstr(23, cellWidth * offsetX, errorText.c_str());
             attroff(COLOR_PAIR(redColorPair));
         } else if (successText != "") {
             attron(COLOR_PAIR(greenColorPair));
-            mvaddstr(23, 3, successText.c_str());
+            mvaddstr(23, cellWidth * offsetX, successText.c_str());
             attroff(COLOR_PAIR(greenColorPair));
         }
         errorText = "";
