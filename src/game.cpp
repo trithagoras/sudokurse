@@ -121,6 +121,7 @@ void Game::draw_help() const {
     int y = 3;
     mvaddstr(y++, x, "Help");
     mvaddstr(y++, x, "[1..9] Set number at cursor position");
+    mvaddstr(y++, x, "[SHIFT + 1..9] Pencil in number at cursor position");
     mvaddstr(y++, x, "[SPACE] Unset number at cursor position");
     mvaddstr(y++, x, "[ENTER] Present solution");
     y++;
