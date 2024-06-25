@@ -120,9 +120,12 @@ void Game::draw_help() const {
     int x = 47;
     int y = 3;
     mvaddstr(y++, x, "Help");
+    y++;
     mvaddstr(y++, x, "[1..9] Set number at cursor position");
-    mvaddstr(y++, x, "[SHIFT + 1..9] Pencil in number at cursor position");
-    mvaddstr(y++, x, "[SPACE] Unset number at cursor position");
+    mvaddstr(y++, x, "[SHIFT + 1..9] Pencil-in number at cursor position");
+    mvaddstr(y++, x, "[C] Unset number at cursor position");
+    mvaddstr(y++, x, "[SHIFT + C] Unset penciled-in number at cursor position");
+    y++;
     mvaddstr(y++, x, "[ENTER] Present solution");
     y++;
     mvaddstr(y++, x, "[R] Reset this game");
@@ -156,9 +159,11 @@ void Game::update_loop() {
             case '1' ... '9':
                 set_at_cursor(char_to_int(ch));
                 break;
-            case KEY_BACKSPACE:
-            case ' ':
+            case 'c':
                 set_at_cursor(unset);
+                break;
+            case 'C':
+                set_at_cursor(unset, true);
                 break;
             case 'n':
             case 'N':
@@ -167,7 +172,7 @@ void Game::update_loop() {
             case 'R':
             case 'r':
                 game = initialState;
-                penciled = initialState;
+                penciled = std::array<std::array<int, 9>, 9>{};
                 break;
             case KEY_ENTER:
             case 10:    // \n
@@ -231,14 +236,13 @@ void Game::draw_cell(int row, int col) const {
             mvaddch(y * cellHeight + 1, x * cellWidth + 2, int_to_char(value));
             attroff(COLOR_PAIR(yellowColorPair));
         }
-    } else {
-        // check if there's a penciled value here
-        value = penciled[row][col];
-        if (value != unset) {
-            attron(COLOR_PAIR(lightColorPair));
-            mvaddch(y * cellHeight + 1, x * cellWidth + 2, int_to_char(value));
-            attroff(COLOR_PAIR(lightColorPair));
-        }
+    }
+    // check if there's a penciled value here as well
+    value = penciled[row][col];
+    if (value != unset) {
+        attron(COLOR_PAIR(redColorPair));
+        mvaddch(y * cellHeight + 1, x * cellWidth + 1, int_to_char(value));
+        attroff(COLOR_PAIR(redColorPair));
     }
 }
 
@@ -276,10 +280,8 @@ void Game::set(int row, int col, int value, bool isPenciled) {
     }
     if (isPenciled) {
         penciled[row][col] = value;
-        game[row][col] = unset;
     } else {
         game[row][col] = value;
-        penciled[row][col] = unset;
     }
 }
 int Game::at_cursor() const {
