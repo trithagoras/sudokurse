@@ -26,6 +26,7 @@ Game::Game() {
     for (int row = 0; row < 9; row++) {
         for (int col = 0; col < 9; col++) {
             game[row][col] = unset;
+            penciled[row][col] = unset;
         }
     }
 }
@@ -71,7 +72,7 @@ void Game::init_view() const {
     keypad(stdscr, true);
 
     // init colors
-    if (!has_colors()) {
+    if (!has_colors() || !can_change_color()) {
         endwin();
         std::cerr << "Your terminal does not support color" << std::endl;
         std::exit(1);
@@ -164,6 +165,7 @@ void Game::update_loop() {
             case 'R':
             case 'r':
                 game = initialState;
+                penciled = initialState;
                 break;
             case KEY_ENTER:
             case 10:    // \n
@@ -173,16 +175,42 @@ void Game::update_loop() {
             case 's':
                 auto_solve();
                 break;
+            // sadly, shift number keys are not a perfect incremental range
+            case '!':
+                set_at_cursor(1, true);
+                break;
+            case '@':
+                set_at_cursor(2, true);
+                break;
+            case '#':
+                set_at_cursor(3, true);
+                break;
+            case '$':
+                set_at_cursor(4, true);
+                break;
+            case '%':
+                set_at_cursor(5, true);
+                break;
+            case '^':
+                set_at_cursor(6, true);
+                break;
+            case '&':
+                set_at_cursor(7, true);
+                break;
+            case '*':
+                set_at_cursor(8, true);
+                break;
+            case '(':
+                set_at_cursor(9, true);
+                break;
         }
         refresh();
     }
 }
 
 // a value = 0 is equivalent to empty
-void Game::draw_cell(int row, int col, int value) const {
-    if (value < 1 || value > 9) {
-        value = unset;
-    }
+void Game::draw_cell(int row, int col) const {
+    int value = game[row][col];
     int y = row + offsetY;
     int x = col + offsetX;
 
@@ -201,6 +229,14 @@ void Game::draw_cell(int row, int col, int value) const {
             mvaddch(y * cellHeight + 1, x * cellWidth + 2, int_to_char(value));
             attroff(COLOR_PAIR(yellowColorPair));
         }
+    } else {
+        // check if there's a penciled value here
+        value = penciled[row][col];
+        if (value != unset) {
+            attron(COLOR_PAIR(lightColorPair));
+            mvaddch(y * cellHeight + 1, x * cellWidth + 2, int_to_char(value));
+            attroff(COLOR_PAIR(lightColorPair));
+        }
     }
 }
 
@@ -208,7 +244,7 @@ void Game::draw_grid() const {
     // draw all grid lines in gray color
     for (int row = 0; row < 9; row++) {
         for (int col = 0; col < 9; col++) {
-            draw_cell(row, col, game[row][col]);
+            draw_cell(row, col);
         }
     }
 
@@ -228,7 +264,7 @@ void Game::draw_grid() const {
 int Game::at(int row, int col) const {
     return game[row][col];
 }
-void Game::set(int row, int col, int value) {
+void Game::set(int row, int col, int value, bool isPenciled) {
     // do nothing if this is initial value
     if (initialState[row][col] != unset) {
         return;
@@ -236,7 +272,13 @@ void Game::set(int row, int col, int value) {
     if (value < 1 || value > 9) {
         value = unset;
     }
-    game[row][col] = value;
+    if (isPenciled) {
+        penciled[row][col] = value;
+        game[row][col] = unset;
+    } else {
+        game[row][col] = value;
+        penciled[row][col] = unset;
+    }
 }
 int Game::at_cursor() const {
     return game[cursorY][cursorX];
@@ -252,8 +294,8 @@ void Game::move_cursor(int row, int col) {
     cursorY = row;
     cursorX = col;
 }
-void Game::set_at_cursor(int value) {
-    set(cursorY, cursorX, value);
+void Game::set_at_cursor(int value, bool isPenciled) {
+    set(cursorY, cursorX, value, isPenciled);
 }
 
 void Game::try_solve() {

@@ -31,8 +31,8 @@ public:
     void reset_game();
     void update_loop();
     int at(int row, int col) const;
-    void set(int row, int col, int value);
-    void set_at_cursor(int value);
+    void set(int row, int col, int value, bool isPenciled = false);
+    void set_at_cursor(int value, bool isPenciled = false);
     int at_cursor() const;
     void translate_cursor(int dRow, int dCol);
     void move_cursor(int row, int col);
@@ -43,9 +43,10 @@ private:
     int cursorY = 0, cursorX = 0;
     Difficulty difficulty = Difficulty::Easy;
     std::array<std::array<int, 9>, 9> game{};
+    std::array<std::array<int, 9>, 9> penciled{};
     std::array<std::array<int, 9>, 9> initialState{};
     std::array<std::array<int, 9>, 9> solution{};
-    void draw_cell(int row, int col, int value) const;
+    void draw_cell(int row, int col) const;
     void init_view() const;
     void draw_grid() const;
     void refresh_view();
