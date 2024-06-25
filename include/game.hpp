@@ -18,7 +18,6 @@ namespace GameConstants {
     constexpr int offsetX = 1;
 }
 
-
 enum class Difficulty {
     Easy,
     Medium,
@@ -37,12 +36,14 @@ private:
     int cursorY = 0, cursorX = 0;
     Difficulty difficulty = Difficulty::Easy;
     std::array<std::array<int, 9>, 9> game{};
-    std::array<std::array<int, 9>, 9> penciled{};
+    std::array<std::array<int, 9>, 9> penciled1{};
+    std::array<std::array<int, 9>, 9> penciled2{};
     std::array<std::array<int, 9>, 9> initialState{};
     std::array<std::array<int, 9>, 9> solution{};
     std::string errorText;
     std::string successText;
     std::unique_ptr<Stopwatch> stopwatch;
+    bool togglePencilState = false;
     void reset_game();
     void update_loop();
     int at(int row, int col) const;
@@ -58,4 +59,5 @@ private:
     void draw_grid() const;
     void refresh_view();
     void draw_help() const;
+    std::string pencil_state_str(bool state) const;
 };

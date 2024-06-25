@@ -26,14 +26,6 @@ std::string difficulty_str(Difficulty d) {
 
 Game::Game() {
     srand(time(NULL));  // init random seed
-
-    // init game board
-    for (int row = 0; row < 9; row++) {
-        for (int col = 0; col < 9; col++) {
-            game[row][col] = unset;
-            penciled[row][col] = unset;
-        }
-    }
 }
 
 Game::~Game() {
@@ -59,7 +51,8 @@ void Game::reset_game() {
     for (int r = 0; r < 9; r++) {
         for (int c = 0; c < 9; c++) {
             game[r][c] = puzzle.grid[r][c];
-            penciled[r][c] = unset;
+            penciled1[r][c] = unset;
+            penciled2[r][c] = unset;
             solution[r][c] = puzzle.solnGrid[r][c];
             initialState[r][c] = puzzle.grid[r][c];
         }
@@ -131,15 +124,21 @@ void Game::refresh_view() {
     }
 }
 
+std::string Game::pencil_state_str(bool state) const {
+    return state ? "right" : "left";
+}
+
 void Game::draw_help() const {
     int x = 47;
     int y = 3;
     mvaddstr(y++, x, "Help");
     y++;
+    mvaddstr(y++, x, "[ARROW KEYS] Move cursor");
     mvaddstr(y++, x, "[1..9] Set number at cursor position");
     mvaddstr(y++, x, "[SHIFT + 1..9] Pencil-in number at cursor position");
     mvaddstr(y++, x, "[C] Unset number at cursor position");
     mvaddstr(y++, x, "[SHIFT + C] Unset penciled-in number at cursor position");
+    mvaddstr(y++, x, ("[SPACE] Change pencil to " + pencil_state_str(!togglePencilState) + " side").c_str());
     y++;
     mvaddstr(y++, x, "[ENTER] Present solution");
     y++;
@@ -147,6 +146,11 @@ void Game::draw_help() const {
     mvaddstr(y++, x, "[N] New game    [Q] Quit game");
     y++;
     mvaddstr(y++, x, "[S] Auto solve");
+    y++;
+    y++;
+    attron(COLOR_PAIR(greenColorPair));
+    mvaddstr(y++, x, ("Currently penciling on the " + pencil_state_str(togglePencilState) + " hand side.").c_str());
+    attroff(COLOR_PAIR(greenColorPair));
 }
 
 void Game::update_loop() {
@@ -187,7 +191,8 @@ void Game::update_loop() {
             case 'R':
             case 'r':
                 game = initialState;
-                penciled = std::array<std::array<int, 9>, 9>{};
+                penciled1 = std::array<std::array<int, 9>, 9>{};
+                penciled2 = std::array<std::array<int, 9>, 9>{};
                 break;
             case KEY_ENTER:
             case 10:    // \n
@@ -225,6 +230,9 @@ void Game::update_loop() {
             case '(':
                 set_at_cursor(9, true);
                 break;
+            case ' ':
+                togglePencilState = !togglePencilState;
+                break;
         }
         refresh();
         std::this_thread::sleep_for(std::chrono::milliseconds(20)); // 50 FPS
@@ -254,12 +262,16 @@ void Game::draw_cell(int row, int col) const {
         }
     }
     // check if there's a penciled value here as well
-    value = penciled[row][col];
+    attron(COLOR_PAIR(redColorPair));
+    value = penciled1[row][col];
     if (value != unset) {
-        attron(COLOR_PAIR(redColorPair));
         mvaddch(y * cellHeight + 1, x * cellWidth + 1, int_to_char(value));
-        attroff(COLOR_PAIR(redColorPair));
     }
+    value = penciled2[row][col];
+    if (value != unset) {
+        mvaddch(y * cellHeight + 1, x * cellWidth + 3, int_to_char(value));
+    }
+    attroff(COLOR_PAIR(redColorPair));
 }
 
 void Game::draw_grid() const {
@@ -295,7 +307,11 @@ void Game::set(int row, int col, int value, bool isPenciled) {
         value = unset;
     }
     if (isPenciled) {
-        penciled[row][col] = value;
+        if (!togglePencilState) {
+            penciled1[row][col] = value;
+        } else {
+            penciled2[row][col] = value;
+        }
     } else {
         game[row][col] = value;
     }
