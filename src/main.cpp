@@ -1,7 +1,8 @@
 #include "game.hpp"
+#include <memory>
 
 int main() {
-    auto game = Game();
-    game.start();
+    auto game = std::make_unique<Game>();
+    game->start();
     return 0;
 }
