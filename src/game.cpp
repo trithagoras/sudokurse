@@ -8,6 +8,8 @@
 #include <thread>
 #include "stopwatch.hpp"
 
+using namespace GameConstants;
+
 std::string difficulty_str(Difficulty d) {
     switch (d) {
         case Difficulty::Easy:
