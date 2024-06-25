@@ -130,7 +130,7 @@ std::string Game::pencil_state_str(bool state) const {
 
 void Game::draw_help() const {
     int x = 47;
-    int y = 3;
+    int y = 2;
     mvaddstr(y++, x, "Help");
     y++;
     mvaddstr(y++, x, "[ARROW KEYS] Move cursor");
