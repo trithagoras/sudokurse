@@ -43,12 +43,14 @@ private:
     std::string errorText;
     std::string successText;
     std::unique_ptr<Stopwatch> stopwatch;
-    bool togglePencilState = false;
+    bool isPencil2 = false;
     void reset_game();
     void update_loop();
     int at(int row, int col) const;
     void set(int row, int col, int value, bool isPenciled = false);
     void set_at_cursor(int value, bool isPenciled = false);
+    void clear(int row, int col, bool isPenciled = false);
+    void clear_at_cursor(bool isPenciled = false);
     int at_cursor() const;
     void translate_cursor(int dRow, int dCol);
     void move_cursor(int row, int col);
@@ -59,5 +61,4 @@ private:
     void draw_grid() const;
     void refresh_view();
     void draw_help() const;
-    std::string pencil_state_str(bool state) const;
 };
