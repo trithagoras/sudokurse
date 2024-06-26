@@ -137,8 +137,10 @@ void Game::draw_help() const {
     y++;
     mvaddstr(y++, x, "[ENTER] Present solution");
     y++;
-    mvaddstr(y++, x, "[R] Reset this game");
-    mvaddstr(y++, x, "[N] New game    [Q] Quit game");
+    mvaddstr(y++, x, "[R]         Reset all numbers");
+    mvaddstr(y++, x, "[SHIFT + R] Reset all penciled-in numbers");
+    mvaddstr(y++, x, "[N]         New game");
+    mvaddstr(y++, x, "[Q]         Quit game");
     y++;
     mvaddstr(y++, x, "[S] Auto solve");
 }
@@ -179,6 +181,9 @@ void Game::update_loop() {
                 reset_game();
                 break;
             case 'R':
+                penciled1 = std::array<std::array<int, 9>, 9>{};
+                penciled2 = std::array<std::array<int, 9>, 9>{};
+                break;
             case 'r':
                 game = initialState;
                 penciled1 = std::array<std::array<int, 9>, 9>{};
