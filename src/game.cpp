@@ -124,21 +124,16 @@ void Game::refresh_view() {
     }
 }
 
-std::string Game::pencil_state_str(bool state) const {
-    return state ? "right" : "left";
-}
-
 void Game::draw_help() const {
     int x = 47;
     int y = 2;
     mvaddstr(y++, x, "Help");
     y++;
-    mvaddstr(y++, x, "[ARROW KEYS] Move cursor");
-    mvaddstr(y++, x, "[1..9] Set number at cursor position");
+    mvaddstr(y++, x, "[ARROW KEYS]   Move cursor");
+    mvaddstr(y++, x, "[1..9]         Set number at cursor position");
+    mvaddstr(y++, x, "[C]            Clear number at cursor position");
     mvaddstr(y++, x, "[SHIFT + 1..9] Pencil-in number at cursor position");
-    mvaddstr(y++, x, "[C] Unset number at cursor position");
-    mvaddstr(y++, x, "[SHIFT + C] Unset penciled-in number at cursor position");
-    mvaddstr(y++, x, ("[SPACE] Change pencil to " + pencil_state_str(!togglePencilState) + " side").c_str());
+    mvaddstr(y++, x, "[SHIFT + C]    Clear penciled-in numbers at cursor position");
     y++;
     mvaddstr(y++, x, "[ENTER] Present solution");
     y++;
@@ -146,11 +141,6 @@ void Game::draw_help() const {
     mvaddstr(y++, x, "[N] New game    [Q] Quit game");
     y++;
     mvaddstr(y++, x, "[S] Auto solve");
-    y++;
-    y++;
-    attron(COLOR_PAIR(greenColorPair));
-    mvaddstr(y++, x, ("Currently penciling on the " + pencil_state_str(togglePencilState) + " hand side.").c_str());
-    attroff(COLOR_PAIR(greenColorPair));
 }
 
 void Game::update_loop() {
@@ -179,10 +169,10 @@ void Game::update_loop() {
                 set_at_cursor(char_to_int(ch));
                 break;
             case 'c':
-                set_at_cursor(unset);
+                clear_at_cursor();
                 break;
             case 'C':
-                set_at_cursor(unset, true);
+                clear_at_cursor(true);
                 break;
             case 'n':
             case 'N':
@@ -229,9 +219,6 @@ void Game::update_loop() {
                 break;
             case '(':
                 set_at_cursor(9, true);
-                break;
-            case ' ':
-                togglePencilState = !togglePencilState;
                 break;
         }
         refresh();
@@ -295,6 +282,22 @@ void Game::draw_grid() const {
     }
 }
 
+void Game::clear(int row, int col, bool isPenciled) {
+    // do nothing if this is initial value
+    if (initialState[row][col] != unset) {
+        return;
+    }
+    if (isPenciled) {
+        penciled1[row][col] = unset;
+        penciled2[row][col] = unset;
+    } else {
+        game[row][col] = unset;
+    }
+}
+void Game::clear_at_cursor(bool isPenciled) {
+    clear(cursorY, cursorX, isPenciled);
+}
+
 int Game::at(int row, int col) const {
     return game[row][col];
 }
@@ -307,11 +310,12 @@ void Game::set(int row, int col, int value, bool isPenciled) {
         value = unset;
     }
     if (isPenciled) {
-        if (!togglePencilState) {
+        if (!isPencil2) {
             penciled1[row][col] = value;
         } else {
             penciled2[row][col] = value;
         }
+        isPencil2 = !isPencil2;
     } else {
         game[row][col] = value;
     }
@@ -329,6 +333,7 @@ void Game::move_cursor(int row, int col) {
     }
     cursorY = row;
     cursorX = col;
+    isPencil2 = false;
 }
 void Game::set_at_cursor(int value, bool isPenciled) {
     set(cursorY, cursorX, value, isPenciled);
